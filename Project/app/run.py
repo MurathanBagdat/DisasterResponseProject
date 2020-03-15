@@ -30,19 +30,22 @@ engine = create_engine('sqlite:///../data/disasterLabeledData.db')
 df = pd.read_sql_table('labeledTrainingData', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/clf.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
-
+    
     # extract data needed for visuals
     # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
-
+    
+    num_of_relate = df['related'].value_counts()[1]
+    num_of_non_relate = df['related'].value_counts()[0]
+    
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
@@ -63,13 +66,50 @@ def index():
                     'title': "Genre"
                 }
             }
+        },
+        {
+            'data': [
+                Bar(
+                    x=['Related', 'Non-Related'],
+                    y=[num_of_relate, num_of_non_relate]
+                )
+            ],
+            
+            'layout':{
+                'title':'Disturbition of Related & Non-Related Messages in Training Set',
+                'yaxis':{
+                    'title': 'Count'
+                },
+                'xaxis':{
+                    'title': 'Related'
+                }                 
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=['Request', 'Offer'],
+                    y=[df['request'].value_counts()[0], df['offer'].value_counts()[1]]
+                )
+            ],
+            
+            'layout':{
+                'title':'Disturbition of Requests and Offers',
+                'yaxis':{
+                    'title': 'Count'
+                },
+                'xaxis':{
+                    'title': 'Request vs Offers'
+                }                 
+            }
         }
+        
     ]
-
+    
     # encode plotly graphs in JSON
     ids = ["graph-{}".format(i) for i, _ in enumerate(graphs)]
     graphJSON = json.dumps(graphs, cls=plotly.utils.PlotlyJSONEncoder)
-
+    
     # render web page with plotly graphs
     return render_template('master.html', ids=ids, graphJSON=graphJSON)
 
@@ -78,13 +118,13 @@ def index():
 @app.route('/go')
 def go():
     # save user input in query
-    query = request.args.get('query', '')
+    query = request.args.get('query', '') 
 
     # use model to predict classification for query
     classification_labels = model.predict([query])[0]
     classification_results = dict(zip(df.columns[4:], classification_labels))
 
-    # This will render the go.html Please see that file.
+    # This will render the go.html Please see that file. 
     return render_template(
         'go.html',
         query=query,
