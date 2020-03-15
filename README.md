@@ -24,3 +24,5 @@ To train a model sklearn pipeline library is used. Best performing classfier is 
 # Web Application
 Also there is a web application that takes user input and classify it using trained model that is trained in ML pipeline part. 
 Here you can see preview of this web app.
+
+![](/Project/webapp.JPG)
